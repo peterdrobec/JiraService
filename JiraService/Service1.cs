@@ -11,62 +11,75 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
+using System.Timers;
 
 
 namespace JiraService
 {
     public partial class Service1 : ServiceBase
     {
+        private Timer tm;
         public Service1()
         {
             InitializeComponent();
 
 
+            //CookieContainer cookies = new CookieContainer();
+            //FilterResults results = new FilterResults();
+            //string url;
+            //DateTime sprintStartDate = DateTime.Now;
+            //DateTime sprintEndDate = DateTime.Now;
+            
+
+            //  url = "http://dev-aus-jira-01.swdev.local/rest/api/2/search?jql=project+%3D+%22Unified+IT+Manager%22+AND+created+%3E+startOfMonth%28%29";
+            // http://dev-aus-jira-01.swdev.local/rest/api/2/search?jql=project+%3D+%22Unified+IT+Manager%22+AND+sprint+in+openSprints%28%29
+
+          
+
+            //cookies = jiraAuthentication();
+            //getStartAndEndDate(cookies, out sprintStartDate, out sprintEndDate);
+            //url = "http://dev-aus-jira-01.swdev.local/rest/api/2/search?jql=project+%3D+%22Unified+IT+Manager%22+AND+created>" + "'" + sprintStartDate.ToString("yyyy-MM-dd") + "'" + "AND+created<=" + "'" + sprintEndDate.ToString("yyyy-MM-dd") + "'";
+            //results = deserializeFilterResults(url, cookies);
+            
+            //getPriorityStats(results.issues);
+            //getStatusStats(results.issues);
+            //getBugsPerDayStats(results.issues);
+            //getUndefinedBugs(results.issues);
+            
+        }
+
+        protected override void OnStart(string[] args)
+        {
+            this.tm = new Timer(900000);
+            tm.AutoReset = true;
+            this.tm.Elapsed += tm_Elapsed;
+            this.tm.Start();
+        }
+
+        void tm_Elapsed(object sender, ElapsedEventArgs e)
+        {
             CookieContainer cookies = new CookieContainer();
             FilterResults results = new FilterResults();
             string url;
             DateTime sprintStartDate = DateTime.Now;
             DateTime sprintEndDate = DateTime.Now;
 
-           // DateTime createDate = DateTime.Now;
-
-            //  url = "http://dev-aus-jira-01.swdev.local/rest/api/2/search?jql=project+%3D+%22Unified+IT+Manager%22+AND+created+%3E+startOfMonth%28%29";
-            // http://dev-aus-jira-01.swdev.local/rest/api/2/search?jql=project+%3D+%22Unified+IT+Manager%22+AND+sprint+in+openSprints%28%29
-
-
-
             cookies = jiraAuthentication();
             getStartAndEndDate(cookies, out sprintStartDate, out sprintEndDate);
             url = "http://dev-aus-jira-01.swdev.local/rest/api/2/search?jql=project+%3D+%22Unified+IT+Manager%22+AND+created>" + "'" + sprintStartDate.ToString("yyyy-MM-dd") + "'" + "AND+created<=" + "'" + sprintEndDate.ToString("yyyy-MM-dd") + "'";
             results = deserializeFilterResults(url, cookies);
 
-            //foreach (var tic in results.issues)
-            //{
-            //    DateTime.TryParse(tic.fields.created, out createDate);
-            //    Console.WriteLine("{0} priority= {1} status = {2}", tic.key, tic.fields.priority.name, createDate.ToString("yyyy-MM-dd"));
-            //}
-
-            //Console.WriteLine(results.issues.Count.ToString());
-
-
             getPriorityStats(results.issues);
             getStatusStats(results.issues);
             getBugsPerDayStats(results.issues);
             getUndefinedBugs(results.issues);
-
-            //Console.Write(sprintStartDate.ToString());
-            //Console.Write(sprintEndDate.ToString());
-
-
-            //Console.ReadKey();
-        }
-
-        protected override void OnStart(string[] args)
-        {
         }
 
         protected override void OnStop()
         {
+            this.tm.Stop();
+            this.tm.Dispose();
+            this.tm = null;
         }
 
         static CookieContainer jiraAuthentication()
@@ -177,7 +190,7 @@ namespace JiraService
                 group ticket by ticket.fields.priority.name into priorityGroup
                 select priorityGroup;
 
-            using (var w = new StreamWriter(@"C:\priorityStats.csv"))
+            using (var w = new StreamWriter(@"C:\ProgramData\JiraCharts\priorityStats.csv"))
             {
                 w.WriteLine("Priority,Count");
                 foreach (var pg in priorityGroups)
@@ -197,7 +210,7 @@ namespace JiraService
                 group ticket by ticket.fields.status.name into statGroup
                 select statGroup;
 
-            using (var w = new StreamWriter(@"C:\statusStats.csv"))
+            using (var w = new StreamWriter(@"C:\ProgramData\JiraCharts\statusStats.csv"))
             {
                 w.WriteLine("Status,Count");
                 foreach (var sg in statGroups)
@@ -217,7 +230,7 @@ namespace JiraService
                 group ticket by DateTime.Parse(ticket.fields.created).ToString("yyyy/MM/dd") into dayGroup
                 select dayGroup;
 
-           using (var w = new StreamWriter(@"C:\bugsPerDayStats.csv"))
+            using (var w = new StreamWriter(@"C:\ProgramData\JiraCharts\bugsPerDayStats.csv"))
             {
                 w.WriteLine("Day,Count");
                 foreach (var dg in dayGroups)
@@ -237,7 +250,7 @@ namespace JiraService
                where ticket.fields.priority.name == "Undefined"
                select new { ticket.key, ticket.fields.creator.displayName };
 
-            using (var w = new StreamWriter(@"C:\undefinedBugs.csv"))
+            using (var w = new StreamWriter(@"C:\ProgramData\JiraCharts\undefinedBugs.csv"))
             {
                 w.WriteLine("Issue,Creator");
                 foreach (var un in undefined)
