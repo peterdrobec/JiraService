@@ -190,7 +190,7 @@ namespace JiraService
                 group ticket by ticket.fields.priority.name into priorityGroup
                 select priorityGroup;
 
-            using (var w = new StreamWriter(@"C:\ProgramData\JiraCharts\priorityStats.csv"))
+            using (var w = new StreamWriter(@"C:\inetpub\wwwroot\solarwinds\gcharts\dashboard\csv\priorityStats.csv"))
             {
                 w.WriteLine("Priority,Count");
                 foreach (var pg in priorityGroups)
@@ -210,7 +210,7 @@ namespace JiraService
                 group ticket by ticket.fields.status.name into statGroup
                 select statGroup;
 
-            using (var w = new StreamWriter(@"C:\ProgramData\JiraCharts\statusStats.csv"))
+            using (var w = new StreamWriter(@"C:\inetpub\wwwroot\solarwinds\gcharts\dashboard\csv\statusStats.csv"))
             {
                 w.WriteLine("Status,Count");
                 foreach (var sg in statGroups)
@@ -230,7 +230,7 @@ namespace JiraService
                 group ticket by DateTime.Parse(ticket.fields.created).ToString("yyyy/MM/dd") into dayGroup
                 select dayGroup;
 
-            using (var w = new StreamWriter(@"C:\ProgramData\JiraCharts\bugsPerDayStats.csv"))
+            using (var w = new StreamWriter(@"C:\inetpub\wwwroot\solarwinds\gcharts\dashboard\csv\bugsPerDayStats.csv"))
             {
                 w.WriteLine("Day,Count");
                 foreach (var dg in dayGroups)
@@ -250,7 +250,7 @@ namespace JiraService
                where ticket.fields.priority.name == "Undefined"
                select new { ticket.key, ticket.fields.creator.displayName };
 
-            using (var w = new StreamWriter(@"C:\ProgramData\JiraCharts\undefinedBugs.csv"))
+            using (var w = new StreamWriter(@"C:\inetpub\wwwroot\solarwinds\gcharts\dashboard\csv\undefinedBugs.csv"))
             {
                 w.WriteLine("Issue,Creator");
                 foreach (var un in undefined)
